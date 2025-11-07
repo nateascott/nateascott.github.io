@@ -196,26 +196,80 @@
       });
     }
   </script>
-    <!-- ===== Conditional Guide Trigger ===== -->
-  <script>
-    // Wait until Pendo has loaded
-    (function waitForPendo() {
-      if (window.pendo && window.pendo.dom && typeof window.pendo.showGuideById === "function") {
-        // Check for the element periodically in case it loads late
-        const checkExist = setInterval(() => {
-          const el = document.getElementById("metrics");
-          if (el) {
-            clearInterval(checkExist);
-            // Launch guide when the element is present
-            pendo.showGuideById("Vilx-C6_50ulQn-h48t7866jopM");
-          }
-        }, 1000);
-      } else {
-        // Retry until Pendo agent is ready
-        setTimeout(waitForPendo, 500);
+  
+<!-- ===== Conditional Guide Trigger (show when #metrics exists, hide when it doesn't) ===== -->
+<script>
+  (function waitForPendo() {
+    if (!(window.pendo && pendo.dom && typeof pendo.showGuideById === "function")) {
+      setTimeout(waitForPendo, 300);
+      return;
+    }
+
+    var GUIDE_ID = "Vilx-C6_50ulQn-h48t7866jopM";
+    var guideShown = false;
+    var CHECK_MS = 500;
+
+    function hasMetrics() {
+      return !!document.getElementById("metrics");
+    }
+
+    function showIfPresent() {
+      if (!guideShown && hasMetrics()) {
+        guideShown = true;
+        pendo.showGuideById(GUIDE_ID);
       }
-    })();
-  </script>
+    }
+
+    function dismissIfMissing() {
+      // If the guide is up but the element is gone (or we navigated), dismiss it
+      if (guideShown && !hasMetrics()) {
+        guideShown = false;
+        // This programmatically closes the currently displayed guide
+        if (typeof pendo.onGuideDismissed === "function") {
+          pendo.onGuideDismissed();
+        } else {
+          // fallback: hide the container if older agent version is in use
+          var c = document.getElementById("pendo-guide-container");
+          if (c) c.style.display = "none";
+        }
+      }
+    }
+
+    // Poll in case the element loads late/async
+    var poll = setInterval(function () {
+      showIfPresent();
+      dismissIfMissing();
+    }, CHECK_MS);
+
+    // React immediately to DOM changes (element added/removed)
+    var mo = new MutationObserver(function () {
+      showIfPresent();
+      dismissIfMissing();
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Handle SPA navigations (pushState/replaceState, back/forward, hash changes)
+    function hookHistory(fnName) {
+      var orig = history[fnName];
+      history[fnName] = function () {
+        var ret = orig.apply(this, arguments);
+        // After route change, re-evaluate presence
+        setTimeout(function () { dismissIfMissing(); showIfPresent(); }, 0);
+        return ret;
+      };
+    }
+    hookHistory("pushState");
+    hookHistory("replaceState");
+    window.addEventListener("popstate", function () { dismissIfMissing(); showIfPresent(); });
+    window.addEventListener("hashchange", function () { dismissIfMissing(); showIfPresent(); });
+
+    // Safety: stop polling when page unloads
+    window.addEventListener("beforeunload", function () {
+      clearInterval(poll);
+      mo.disconnect();
+    });
+  })();
+</script>
 
   <title>pizzaCRM</title>
 
