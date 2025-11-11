@@ -197,7 +197,7 @@
     }
   </script>
   
-<!-- ===== Conditional Guide Trigger (show when #metrics exists, hide when it doesn't) =====
+<!-- ===== Conditional Guide Trigger (show when #REPLACEWITHCLASS exists, hide when it doesn't) =====
 <script>
   (function waitForPendo() {
     if (!(window.pendo && pendo.dom && typeof pendo.showGuideById === "function")) {
@@ -209,12 +209,12 @@
     var guideShown = false;
     var CHECK_MS = 500;
 
-    function hasMetrics() {
-      return !!document.getElementById("metrics");
+    function hasMREPLACEWITHCLASS() {
+      return !!document.getElementById("REPLACEWITHCLASS");
     }
 
     function showIfPresent() {
-      if (!guideShown && hasMetrics()) {
+      if (!guideShown && hasREPLACEWITHCLASS()) {
         guideShown = true;
         pendo.showGuideById(GUIDE_ID);
       }
@@ -222,7 +222,7 @@
 
     function dismissIfMissing() {
       // If the guide is up but the element is gone (or we navigated), dismiss it
-      if (guideShown && !hasMetrics()) {
+      if (guideShown && !hasREPLACEWITHCLASS()) {
         guideShown = false;
         // This programmatically closes the currently displayed guide
         if (typeof pendo.onGuideDismissed === "function") {
