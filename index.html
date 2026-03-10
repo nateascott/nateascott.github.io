@@ -34,8 +34,78 @@
     }
   </script>
 
-  <!-- ===== Visitor & Account Setup Logic ===== -->
   <script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const disablePendo = urlParams.get("disablePendo") === "true";
+
+  // Optional URL overrides when you need them:
+  // ?visitor=alice&account=Acme%20Inc&role=admin&lang=fr
+  const urlVisitor = urlParams.get("visitor");
+  const urlAccount = urlParams.get("account");
+  const urlRole = urlParams.get("role");
+  const urlLang = urlParams.get("lang");
+
+  // ===== Stable defaults (edit these when you want to change test identity) =====
+  const DEFAULT_ACCOUNT = "Waynes World";
+  const DEFAULT_VISITOR = "Michael";      // visitor "name"/label (also used as email local-part)
+  const DEFAULT_ROLE = "admin";
+  const DEFAULT_LANGUAGE = "en";          // manually change as needed for localisation testing
+
+  // Use URL values if provided, otherwise stable defaults
+  const account_id = urlAccount || DEFAULT_ACCOUNT;
+  const visitorName = urlVisitor || DEFAULT_VISITOR;
+  const role = urlRole || DEFAULT_ROLE;
+  const language = urlLang || DEFAULT_LANGUAGE;
+
+  // Build a stable visitor ID (email style) from visitor + account
+  const accountSlug = account_id.replace(/\s/g, "");
+  const visitorId = `${visitorName}@${accountSlug}.com`;
+
+  // Store user info globally (handy for debugging)
+  window.userInfo = {
+    account: account_id,
+    visitor: visitorName,
+    visitorId,
+    role,
+    language
+  };
+
+  // ===== Initialize Pendo unless disabled =====
+  if (!disablePendo) {
+    (function (r, e, a, i, o) {
+      var t, n, s, c, l;
+      (o = r[i] = r[i] || {})._q = [];
+      const methods = ["initialize", "identify", "updateOptions", "pageLoad"];
+      for (n = 0; n < methods.length; n++) {
+        ((method) => {
+          o[method] = o[method] || function () {
+            o._q[method === methods[0] ? "unshift" : "push"]([method].concat([].slice.call(arguments, 0)));
+          };
+        })(methods[n]);
+      }
+
+      (c = e.createElement(a)).async = true;
+      c.src = "https://cdn.pendo.io/agent/static/1e4c08b9-e3d6-453a-b8cf-f567dd979553/pendo.js";
+      (l = e.getElementsByTagName(a)[0]).parentNode.insertBefore(c, l);
+    })(window, document, "script", "pendo");
+
+    pendo.initialize({
+      visitor: {
+        id: visitorId,     // stable
+        role: role
+      },
+      account: {
+        id: account_id     // stable
+      },
+      metadata: {
+        language: language // new: stable + easy to override
+      }
+    });
+  }
+</script>
+
+  <!-- ===== Visitor & Account Setup Logic ===== -->
+  <!--script>
     const urlParams = new URLSearchParams(window.location.search);
     const disablePendo = urlParams.get("disablePendo") === "true";
     const urlVisitor = urlParams.get("visitor");
@@ -195,9 +265,10 @@
         }
       });
     }
-  </script>
+  </script->
   
-<!-- ===== Conditional Guide Trigger (show when #REPLACEWITHCLASS exists, hide when it doesn't) =====
+  
+<===== Conditional Guide Trigger (show when #REPLACEWITHCLASS exists, hide when it doesn't) =====
 <script>
   (function waitForPendo() {
     if (!(window.pendo && pendo.dom && typeof pendo.showGuideById === "function")) {
@@ -257,7 +328,7 @@
         setTimeout(function () { dismissIfMissing(); showIfPresent(); }, 0);
         return ret;
       };
-    }
+    }n
     hookHistory("pushState");
     hookHistory("replaceState");
     window.addEventListener("popstate", function () { dismissIfMissing(); showIfPresent(); });
