@@ -92,13 +92,12 @@
     pendo.initialize({
       visitor: {
         id: visitorId,     // stable
-        role: role
+        role: role,
+        language: language // new: stable + easy to override
+
       },
       account: {
         id: account_id     // stable
-      },
-      metadata: {
-        language: language // new: stable + easy to override
       }
     });
   }
